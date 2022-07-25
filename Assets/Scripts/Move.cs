@@ -5,10 +5,14 @@ using UnityEngine.Events;
 
 public class Move : MonoBehaviour
 {
-    Easing easing;
+    Easing Easing;
+    Animator Animator;
+    SpriteRenderer SpriteRenderer;
+    Transform Transform;
 
+    bool isFacingRight = true;
     float maxSpeed = 10f;
-    float moveSpeed = 1f;
+    float moveSpeed = 2f;
     Rigidbody2D rb;
     float moveX = 0f;
     float moveY = 0f;
@@ -22,6 +26,10 @@ public class Move : MonoBehaviour
     {
         pos = transform.position;
         rb = GetComponent<Rigidbody2D>();
+        Animator = GetComponent<Animator>();
+        SpriteRenderer = GetComponent<SpriteRenderer>();
+        Transform = GetComponent<Transform>();
+        Animator.SetBool("isIdling", true);
     }
 
 
@@ -37,19 +45,40 @@ public class Move : MonoBehaviour
         {
             Walk();
         }
+        else
+        {
+            Animator.SetFloat("speedAnimation", 0);
+            Animator.SetBool("isWalking", false);
+            Animator.SetBool("isIdling", true);
+        }
     }
 
     public void Walk ()
     {
-        moveX = maxSpeed * Input.GetAxisRaw("Horizontal");
-        moveX = Mathf.Lerp(rb.velocity.x, moveX, moveSpeed);
-        rb.velocity = new Vector2(Easing.EaseIn(moveX), rb.velocity.y);
-        /*if (movmentSpeed > 0 && !isRight) FlipDirection();
-        if (movmentSpeed < 0 && isRight) FlipDirection();*/
+        Animator.SetFloat("speedAnimation", 1);
+        Animator.SetBool("isIdling", false);
+        Animator.SetBool("isWalking", true);
+        moveX = Input.GetAxisRaw("Horizontal");
+        rb.velocity = new Vector2(moveX, rb.velocity.y);
+        if (moveX < 0 && isFacingRight)
+        {
+            Flip();
+        }
+        else if (moveX > 0 && !isFacingRight)
+        {
+            Flip();
+        }
+        else { }
 
-        /*Vector2 targetVelocity = new Vector2(moveX, vZero);*/
-        /*rb.velocity = Vector2.SmoothDamp(rb.velocity, targetVelocity, ref velocity, movmentSmoothing);*/
-        
+    }
+
+
+    void Flip ()
+    {
+        Vector3 currentScale = gameObject.transform.localScale;
+        currentScale.x *= -1;
+        gameObject.transform.localScale = currentScale;
+        isFacingRight = !isFacingRight;
     }
 
     /*protected virtual void UpdateGravity()

@@ -13283,7 +13283,7 @@ TilemapRenderer:
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 3
-  m_Mode: 1
+  m_Mode: 0
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
 --- !u!1839735485 &1665539012
@@ -14010,21 +14010,33 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 6141620630506257187, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
-      propertyPath: m_Mass
-      value: 2
+    - target: {fileID: 6141620630506257186, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.241
+      value: -0.239
       objectReference: {fileID: 0}
     - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.701
+      value: -0.62
       objectReference: {fileID: 0}
     - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
       propertyPath: m_LocalPosition.z
@@ -14056,6 +14068,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6141620630506257189, guid: 225a6434d6136bd40ac03e395c95ed27, type: 3}
+      propertyPath: m_ConstrainProportionsScale
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
