@@ -47,7 +47,6 @@ public class Move : MonoBehaviour
         }
         else
         {
-            Animator.SetFloat("speedAnimation", 0);
             Animator.SetBool("isWalking", false);
             Animator.SetBool("isIdling", true);
         }
@@ -55,7 +54,6 @@ public class Move : MonoBehaviour
 
     public void Walk ()
     {
-        Animator.SetFloat("speedAnimation", 1);
         Animator.SetBool("isIdling", false);
         Animator.SetBool("isWalking", true);
         moveX = Input.GetAxisRaw("Horizontal");
