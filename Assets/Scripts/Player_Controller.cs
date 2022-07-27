@@ -7,8 +7,8 @@ public class Player_Controller : MonoBehaviour
 {
 
     private Rigidbody2D _rb2D;
-    [SerializeField] private float _moveSpeed = 10;
-    [Range(0, .3f)][SerializeField] private float m_MovementSmoothing = .05f;
+    /*[SerializeField] private float _moveSpeed = 10;*/
+    /*[Range(0, .3f)][SerializeField] private float m_MovementSmoothing = .05f;*/
     public GameObject _player;
     private Vector2 _moveDirection = Vector2.zero;
 

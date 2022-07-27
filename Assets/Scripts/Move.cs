@@ -5,7 +5,12 @@ using UnityEngine.Events;
 
 public class Move : MonoBehaviour
 {
-    
+    public enum PLAYER_STATE
+    {
+        IDLE, JUMP, WALK, ATTACK
+    }
+    public PLAYER_STATE currentState = PLAYER_STATE.IDLE;
+
     Easing Easing;
     Animator Animator;
     SpriteRenderer SpriteRenderer;
@@ -14,23 +19,20 @@ public class Move : MonoBehaviour
     Rigidbody2D rb;
     BoxCollider2D bc2D;
 
-    bool isFacingRight = true;
-    bool isJumping = false;
-    bool isGrounded = false;
+    bool isFacingRight;
+    public bool isGrounded = false;
 
     float heightTestPlayer;
-    float maxSpeed = 10f;
-    float moveSpeed = 2f;
-    public float jumpForce = 5f;
+    float airSpeed = 0.7f;
+    float jumpForce = 3.5f;
     float moveX = 0f;
     float moveY = 0f;
     int layerMaskGround;
 
+
     Vector2 vZero = Vector2.zero;
     Vector2 speed = Vector2.zero;
     Vector3 pos;
-
-
 
     private void Awake()
     {
@@ -41,62 +43,66 @@ public class Move : MonoBehaviour
         Transform = GetComponent<Transform>();
         bc2D = GetComponent<BoxCollider2D>();
         heightTestPlayer = bc2D.bounds.extents.y + 0.05f;
+        isFacingRight = Transform.localScale.x > 0;
         layerMaskGround = LayerMask.GetMask("Ground");
-        Animator.SetBool("isIdling", true);
-    }
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     private void FixedUpdate()
     {
-        if (Input.GetAxisRaw("Horizontal") != 0)
-        {
-            Walk();
-        }   
-        else if (Input.GetAxisRaw("Jump") != 0 && !isJumping && IsGrounded())
-        {
-            Jump();
-        }
-        else if (IsGrounded())
-        {
-            isGrounded = true;
-            isJumping = false;
-            Animator.SetBool("isJumping", false);
-            Animator.SetBool("isWalking", false);
-            Animator.SetBool("isIdling", true);
-        }
+        InputCheck();
+        Debug.Log(currentState);
     }
 
-    public void Walk ()
+    private void InputCheck()
     {
-        Animator.SetBool("isIdling", false);
-        Animator.SetBool("isWalking", true);
         moveX = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(moveX, rb.velocity.y);
-        if (moveX < 0 && isFacingRight)
+        moveY = Input.GetAxisRaw("Vertical");
+
+        if (moveX != 0)
         {
-            Flip();
+            if (!IsGrounded())
+            {
+                Walk(moveX * airSpeed);
+            }
+            else
+            {
+                Walk(moveX);
+            }
         }
-        else if (moveX > 0 && !isFacingRight)
+        if (moveY != 0 && currentState != PLAYER_STATE.JUMP && IsGrounded())
         {
-            Flip();
+            Jump(moveY);
+        }
+        if (moveX == 0 && moveY == 0)
+        {
+            if (currentState != PLAYER_STATE.IDLE)
+            {
+                StartCoroutine(IdleCheck());
+            }
         }
     }
 
-    public void Jump ()
+    public void Walk (float input)
     {
-        isJumping = true;
-        Animator.SetBool("isIdling", false);
-        Animator.SetTrigger("isJumping");
-        moveY = Input.GetAxisRaw("Jump");
-        rb.AddForce(new Vector2(rb.velocity.x, moveY) * jumpForce, ForceMode2D.Impulse);
+        currentState = PLAYER_STATE.WALK;
+        Animator.Play("Walk");
+        rb.velocity = new Vector2(input, rb.velocity.y);
+        if (input < 0 && isFacingRight)
+        {
+            Flip();
+        }
+        else if (input > 0 && !isFacingRight)
+        {
+            Flip();
+        }
     }
 
+    public void Jump (float input)
+    {
+        currentState = PLAYER_STATE.JUMP;
+        Animator.Play("Jump");
+        rb.AddForce(new Vector2(rb.velocity.x, input * jumpForce), ForceMode2D.Impulse);
+    }
 
     void Flip ()
     {
@@ -106,58 +112,28 @@ public class Move : MonoBehaviour
         isFacingRight = !isFacingRight;
     }
 
-    /*protected virtual void UpdateGravity()
-    {
-        float g = pConfig.gravity * gravityScale * Time.fixedDeltaTime;
-        if (speed.y > 0)
-        {
-            speed.y += g;
-        }
-        else
-        {
-            externalForce.y += g;
-        }
-    }*/
-
-    //private bool IsGrounded()
-    //{
-    //    var groundCheck = Physics2D.Raycast(transform.position, Vector2.down, 0.7f);
-    //    return groundCheck.collider != null && groundCheck.collider.CompareTag("Ground");
-    //}
-
     private bool IsGrounded()
     {
         RaycastHit2D hit = Physics2D.Raycast(bc2D.bounds.center, Vector2.down, heightTestPlayer, layerMaskGround);
-        bool isGrounded = hit.collider != null;
-        if (isGrounded)
-        {
-            Animator.SetBool("isGrounded", true);
-        }
-        else
-        {
-            Animator.SetBool("isGrounded", false);
-        }
-        Debug.DrawRay(bc2D.bounds.center, Vector2.down * heightTestPlayer, isGrounded ? Color.green : Color.red, 0.5f);
+        bool groundbool = hit.collider != null;
+        isGrounded = groundbool;
+        Debug.DrawRay(bc2D.bounds.center, Vector2.down * heightTestPlayer, groundbool ? Color.green : Color.red, 0.5f);
         
-        return isGrounded;
+        return groundbool;
     }
 
-    void OnDrawGizmosSelected()
+    IEnumerator IdleCheck()
     {
-    #if UNITY_EDITOR
-            Gizmos.color = Color.red;
+        if (rb == null) { yield break; }
 
-            //Draw the suspension
-            Gizmos.DrawLine(
-                Vector3.zero,
-                Vector3.up  
-            );
+        while (rb.velocity == Vector2.zero)
+        {
+            currentState = PLAYER_STATE.IDLE;
+            Animator.Play("Idle");
+            yield break;
+        }
 
-            //draw force application point
-            Gizmos.DrawWireSphere(Vector3.zero, 0.05f);
-
-            Gizmos.color = Color.white;
-    #endif
+        yield break;
     }
 
 }
