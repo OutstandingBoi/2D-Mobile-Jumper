@@ -21,17 +21,25 @@ public class Move : MonoBehaviour
 
     bool isFacingRight;
     public bool isGrounded = false;
+    public bool isJumping = false;
+    public bool isDashing = false;
 
+    public const float maxDashTime = 1.0f;
+    float dashDistance = 10;
+    float dashSpeed = 6;
     float heightTestPlayer;
     float airSpeed = 0.7f;
     float jumpForce = 3.5f;
     float moveX = 0f;
     float moveY = 0f;
+    float dashInput = 0f;
     int layerMaskGround;
 
 
+    
     Vector2 vZero = Vector2.zero;
     Vector2 speed = Vector2.zero;
+    Vector2 moveDirection;
     Vector3 pos;
 
     private void Awake()
@@ -47,33 +55,61 @@ public class Move : MonoBehaviour
         layerMaskGround = LayerMask.GetMask("Ground");
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         InputCheck();
-        Debug.Log(currentState);
+        //Debug.Log(currentState);
+    }
+
+    private void FixedUpdate()
+    {
+        switch (currentState)
+        {
+            case PLAYER_STATE.IDLE:
+                Animator.Play("Idle");
+                break;
+            case PLAYER_STATE.JUMP:
+                if (!isJumping)
+                {
+                    Jump(moveY);
+                }
+                break;
+            case PLAYER_STATE.WALK:
+                if (!IsGrounded())
+                {
+                    Walk(moveX * airSpeed);
+                }
+                else
+                {
+                    Walk(moveX);
+                }
+                break;
+            case PLAYER_STATE.ATTACK:
+                break;
+        }
     }
 
     private void InputCheck()
     {
         moveX = Input.GetAxisRaw("Horizontal");
         moveY = Input.GetAxisRaw("Vertical");
+        dashInput = Input.GetAxisRaw("Dash");
+        
 
         if (moveX != 0)
         {
-            if (!IsGrounded())
-            {
-                Walk(moveX * airSpeed);
-            }
-            else
-            {
-                Walk(moveX);
-            }
+            currentState = PLAYER_STATE.WALK;
         }
         if (moveY != 0 && currentState != PLAYER_STATE.JUMP && IsGrounded())
         {
-            Jump(moveY);
+            
+            currentState = PLAYER_STATE.JUMP;
         }
-        if (moveX == 0 && moveY == 0)
+        if (dashInput != 0 && isJumping && !isDashing)
+        {
+            StartCoroutine(Dash());
+        }
+        if (moveX == 0 && moveY == 0 & IsGrounded())
         {
             if (currentState != PLAYER_STATE.IDLE)
             {
@@ -84,8 +120,10 @@ public class Move : MonoBehaviour
 
     public void Walk (float input)
     {
-        currentState = PLAYER_STATE.WALK;
-        Animator.Play("Walk");
+        if (isGrounded)
+        {
+            Animator.Play("Walk");
+        }
         rb.velocity = new Vector2(input, rb.velocity.y);
         if (input < 0 && isFacingRight)
         {
@@ -99,9 +137,25 @@ public class Move : MonoBehaviour
 
     public void Jump (float input)
     {
-        currentState = PLAYER_STATE.JUMP;
+        isJumping = true;
         Animator.Play("Jump");
         rb.AddForce(new Vector2(rb.velocity.x, input * jumpForce), ForceMode2D.Impulse);
+    }
+
+    IEnumerator Dash()
+    {
+        isDashing = true;
+        Animator.Play("Dash");
+
+        float time = 0;
+        moveDirection = pos * dashDistance;
+        while (time < 5)
+        {
+            pos = Vector2.Lerp(pos, moveDirection, time / 5);
+            time += Time.fixedDeltaTime;
+            yield return null;
+        }
+        pos = moveDirection;
     }
 
     void Flip ()
@@ -117,6 +171,11 @@ public class Move : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(bc2D.bounds.center, Vector2.down, heightTestPlayer, layerMaskGround);
         bool groundbool = hit.collider != null;
         isGrounded = groundbool;
+        if (isGrounded)
+        {
+            isJumping = false;
+            isDashing = false;
+        }
         Debug.DrawRay(bc2D.bounds.center, Vector2.down * heightTestPlayer, groundbool ? Color.green : Color.red, 0.5f);
         
         return groundbool;
@@ -129,7 +188,6 @@ public class Move : MonoBehaviour
         while (rb.velocity == Vector2.zero)
         {
             currentState = PLAYER_STATE.IDLE;
-            Animator.Play("Idle");
             yield break;
         }
 
