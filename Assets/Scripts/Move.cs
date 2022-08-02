@@ -24,20 +24,20 @@ public class Move : MonoBehaviour
     public bool isJumping = false;
     public bool isDashing = false;
 
+    bool canDash = true;
+
     public const float maxDashTime = 1.0f;
-    float dashDistance = 10;
-    float dashSpeed = 6;
+    float dashLength = .3f;
     float heightTestPlayer;
     float airSpeed = 0.7f;
     float jumpForce = 3.5f;
     float moveX = 0f;
     float moveY = 0f;
     float dashInput = 0f;
+    float dashCooldown = 5;
+
     int layerMaskGround;
 
-
-    
-    Vector2 vZero = Vector2.zero;
     Vector2 speed = Vector2.zero;
     Vector2 moveDirection;
     Vector3 pos;
@@ -94,7 +94,7 @@ public class Move : MonoBehaviour
         moveX = Input.GetAxisRaw("Horizontal");
         moveY = Input.GetAxisRaw("Vertical");
         dashInput = Input.GetAxisRaw("Dash");
-        
+
 
         if (moveX != 0)
         {
@@ -102,12 +102,12 @@ public class Move : MonoBehaviour
         }
         if (moveY != 0 && currentState != PLAYER_STATE.JUMP && IsGrounded())
         {
-            
+
             currentState = PLAYER_STATE.JUMP;
         }
         if (dashInput != 0 && isJumping && !isDashing)
         {
-            StartCoroutine(Dash());
+            StartCoroutine(Dash(moveX));
         }
         if (moveX == 0 && moveY == 0 & IsGrounded())
         {
@@ -118,7 +118,7 @@ public class Move : MonoBehaviour
         }
     }
 
-    public void Walk (float input)
+    public void Walk(float input)
     {
         if (isGrounded)
         {
@@ -135,27 +135,25 @@ public class Move : MonoBehaviour
         }
     }
 
-    public void Jump (float input)
+    public void Jump(float input)
     {
         isJumping = true;
         Animator.Play("Jump");
         rb.AddForce(new Vector2(rb.velocity.x, input * jumpForce), ForceMode2D.Impulse);
     }
 
-    IEnumerator Dash()
+    IEnumerator Dash(float x)
     {
+        canDash = false;
         isDashing = true;
-        Animator.Play("Dash");
-
-        float time = 0;
-        moveDirection = pos * dashDistance;
-        while (time < 5)
-        {
-            pos = Vector2.Lerp(pos, moveDirection, time / 5);
-            time += Time.fixedDeltaTime;
-            yield return null;
-        }
-        pos = moveDirection;
+        float originalGravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+        rb.velocity = new Vector2(transform.localScale.x * 2f, 0f);
+        yield return new WaitForSeconds(dashLength);
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+        yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
     }
 
     void Flip ()
